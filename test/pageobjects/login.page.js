@@ -24,6 +24,10 @@ class LoginPage extends Page {
         return $("h3[data-test='error']");
     }
 
+    get errorIcon () {
+        return $("svg[data-icon='times-circle']");
+    }
+
     /**
      * a method to encapsule automation code to interact with the page
      * e.g. to login using username and password

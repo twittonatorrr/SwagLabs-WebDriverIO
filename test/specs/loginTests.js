@@ -11,7 +11,7 @@ describe('Login-Suite', ()=>{
         await expect(pageTitle).toBe('Swag Labs');
     })
 
-    it.only('Test-Case 1: Valid Login', async ()=>{
+    it('Test-Case 1: Valid Login', async ()=>{
         //In this case I didn't use login method from LoginPage because I wanted to assert every expected result for every step
 
         await LoginPage.inputUsername.setValue(testData.validLogin); //step 1
@@ -32,6 +32,8 @@ describe('Login-Suite', ()=>{
         await expect(LoginPage.inputUsername).toHaveValue(testData.validLogin); //expected result
         await expect(LoginPage.inputPassword).toHaveValue(testData.invalidPassword); //expected result
         await expect(LoginPage.error).toBeDisplayed(); //expected result     
+        await expect(LoginPage.error).toHaveText("Epic sadface: Username and password do not match any user in this service");
+        await expect(LoginPage.errorIcon).toBeDisplayed();
     })
 
     it('Test-Case 3: Login with invalid login', async ()=>{
@@ -39,6 +41,7 @@ describe('Login-Suite', ()=>{
         await expect(LoginPage.inputUsername).toHaveValue(testData.invalidLogin); //expected result
         await expect(LoginPage.inputPassword).toHaveValue(testData.validPassword); //expected result
         await expect(LoginPage.error).toBeDisplayed(); //expected result     
+        await expect(LoginPage.errorIcon).toBeDisplayed();
     })
 
     it('Test-Case 4: Logout', async ()=>{
