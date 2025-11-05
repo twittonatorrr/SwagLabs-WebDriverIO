@@ -8,12 +8,15 @@ This project contains automated end-to-end tests for the SauceDemo  web applicat
    git clone https://github.com/your-username/saucedemo-webdriverio-tests.git
 
 2. **Go to the main folder**
+    ```bash
    cd saucedemo-webdriverio-tests
 
 3. **Install all dependencies**
+    ```bash
    npm install
 
 3. **Run tests**
+    ```bash
    npx wdio run ./wdio.conf.js
 
    npx wdio run ./wdio.conf.js --spec ./test/specs/items.e2e.js
