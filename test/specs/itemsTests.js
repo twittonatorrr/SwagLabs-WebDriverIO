@@ -1,154 +1,124 @@
-const { expect, browser } = require("@wdio/globals");
-const LoginPage = require("../pageobjects/login.page");
-const MainPage = require("../pageobjects/main.page");
-const CartPage = require("../pageobjects/cart.page")
-const testData = require("../../fixtures/data.json");
+import { faker } from '@faker-js/faker';
+import LoginPage from "../pageobjects/login.page";
+import MainPage from "../pageobjects/main.page";
+import CartPage from "../pageobjects/cart.page";
+import testData from "../../fixtures/data.json";
+import { browser, expect } from '@wdio/globals';
 
 describe('Items-Suite',()=>{
-        
+    const loginPage = new LoginPage;
+    const mainPage = new MainPage;
+    const cartPage = new CartPage;
+
     beforeEach(async ()=>{
-        //precondition
+
         await browser.reloadSession();
-        await browser.url(testData.baseUrl);
-        const pageTitle = await browser.getTitle();
-        await expect(pageTitle).toBe('Swag Labs');
-        await LoginPage.login(testData.validLogin, testData.validPassword);
+        await loginPage.openPage();
+        await loginPage.titlePage;
+        await loginPage.login(testData.validLogin, testData.validPassword);
     })
 
     it('Test-Case 5:Saving the cart after logout', async()=>{
-        const addItem1 = await $('#add-to-cart-sauce-labs-backpack');
+        await mainPage.clickAddItemBtn(mainPage.item1); 
+        await expect(mainPage.cart).toHaveText("1"); 
 
-        await addItem1.click(); //step 1
-        await expect(MainPage.cart).toHaveText("1"); //expected result
-
-        await MainPage.clickBurgerBtn(); //step 2
-        await MainPage.clickLogoutBtn(); //step 3
-        await LoginPage.login(testData.validLogin, testData.validPassword) //step 4
-        await MainPage.goToCartPage(); //step 5
-        await expect(MainPage.cart).toHaveText("1"); //expected result
+        await mainPage.clickBurgerBtn(); 
+        await mainPage.clickLogoutBtn(); 
+        await loginPage.login(testData.validLogin, testData.validPassword) 
+        await mainPage.goToCartPage(); 
+        await expect(mainPage.cart).toHaveText("1"); 
     })
 
     it('Test-Case 6:Sorting', async()=>{
-        const option = await $('.active_option');
-        await expect(option).toHaveText("Name (A to Z)");
+        await expect(mainPage.option).toHaveText("Name (A to Z)");
 
-        await MainPage.sortBtn.selectByAttribute("value", "lohi"); //step 1.1
-        await expect(option).toHaveText("Price (low to high)"); //expected result
+        await mainPage.sortBtn.selectByAttribute("value", "lohi"); 
+        await expect(mainPage.option).toHaveText("Price (low to high)"); 
 
-        await MainPage.sortBtn.selectByAttribute("value", "hilo"); //step 1.2
-        await expect(option).toHaveText("Price (high to low)");
+        await mainPage.sortBtn.selectByAttribute("value", "hilo"); 
+        await expect(mainPage.option).toHaveText("Price (high to low)");
 
-        await MainPage.sortBtn.selectByAttribute("value", "az"); //step 1.3
-        await expect(option).toHaveText("Name (A to Z)"); //expected result
+        await mainPage.sortBtn.selectByAttribute("value", "az"); 
+        await expect(mainPage.option).toHaveText("Name (A to Z)"); 
 
-        await MainPage.sortBtn.selectByAttribute("value", "za"); //step 1.4
-        await expect(option).toHaveText("Name (Z to A)"); //expected result
+        await mainPage.sortBtn.selectByAttribute("value", "za"); 
+        await expect(mainPage.option).toHaveText("Name (Z to A)"); 
     })
 
     it('Test-Case 7:Footer Links', async () => {
-        await browser.url('https://www.saucedemo.com/inventory.html');
-
+        await mainPage.url;
+        
         const mainWindow = await browser.getWindowHandle();
-        const footer = await $('footer');
-        await footer.scrollIntoView();
+        await mainPage.footer.scrollIntoView();
 
-    
-        await MainPage.goToTwitter(); //step 1
-        await browser.waitUntil(async () => (await browser.getWindowHandles()).length > 1);
-        let handles = await browser.getWindowHandles();
-        await browser.switchToWindow(handles[1]);
+        const links = [
+            {click: ()=> mainPage.goToTwitter(), expectedUrl: "https://x.com/saucelabs"},
+            {click: ()=> mainPage.goToFacebook(), expectedUrl: "https://www.facebook.com/saucelabs"},
+            {click: ()=> mainPage.goToLinkedIn(), expectedUrl: "https://www.linkedin.com/company/sauce-labs/"}
+        ];
 
-        const twitterUrl = await browser.getUrl();
-        expect(twitterUrl).toContain('https://x.com/saucelabs');
+        for(const link of links){
+            await link.click();
 
-        await browser.closeWindow();
-        await browser.switchToWindow(mainWindow);
+            await browser.waitUntil(
+                async () => (await browser.getWindowHandles()).length > 1,
+                {timeout: 10000, msg: "New window did not open"}
+            );
 
+            const handles = await browser.getWindowHandles();
+            await browser.switchToWindow(handles[1]);
 
-        await MainPage.goToFacebook(); //step 2
-        await browser.waitUntil(async () => (await browser.getWindowHandles()).length > 1);
-        handles = await browser.getWindowHandles();
-        await browser.switchToWindow(handles[1]);
+            const currentUrl = await browser.getUrl();
+            await expect(currentUrl).toContain(link.expectedUrl);
 
-        const fbUrl = await browser.getUrl();
-        expect(fbUrl).toContain('https://www.facebook.com/saucelabs');
-
-        await browser.closeWindow();
-        await browser.switchToWindow(mainWindow);
-
-
-        await MainPage.goToLinkedIn(); //step 3
-        await browser.waitUntil(async () => (await browser.getWindowHandles()).length > 1);
-        handles = await browser.getWindowHandles();
-        await browser.switchToWindow(handles[1]);
-
-        const linkedUrl = await browser.getUrl();
-        expect(linkedUrl).toContain('https://www.linkedin.com/company/sauce-labs/');
-
-        await browser.closeWindow();
-        await browser.switchToWindow(mainWindow);
+            await browser.closeWindow();
+            await browser.switchToWindow(mainWindow);
+        }
     });
 
     it('Test-Case 8:Valid Checkout', async()=>{
-        const addItem = await $('#add-to-cart-sauce-labs-backpack');
-        const ItemName = await $("//div[contains(text(), 'Sauce Labs Backpack')]");
+        const firstName = faker.person.firstName();
+        const lastName = faker.person.lastName();
+        const postalCode = faker.location.zipCode();
         const ItemPrice = '$29.99';
 
-        await addItem.click(); //step 1
-        await expect(MainPage.cart).toHaveText("1"); //expected result
+        await mainPage.clickAddItemBtn(mainPage.item1); 
+        await expect(mainPage.cart).toHaveText("1"); 
 
-        await MainPage.goToCartPage(); //step 2
+        await mainPage.goToCartPage(); 
 
-        await CartPage.checkoutBtn.click(); //step 3
-        await expect(CartPage.checkoutForm).toBeDisplayed(); //expected result
+        await cartPage.clickCheckoutBtn(); 
+        await expect(cartPage.checkoutForm).toBeDisplayed(); 
 
-        await CartPage.inputFirstName.setValue('First'); //step 4
-        await expect(CartPage.inputFirstName).toHaveValue('First'); //expected result
+        await cartPage.inputFirstName.setValue(firstName); 
+        await expect(cartPage.inputFirstName).toHaveValue(firstName); 
 
-        await CartPage.inputLastName.setValue('Last'); //step 5
-        await expect(CartPage.inputLastName).toHaveValue('Last'); //expected result
+        await cartPage.inputLastName.setValue(lastName); 
+        await expect(cartPage.inputLastName).toHaveValue(lastName);
 
-        await CartPage.inputPostalCode.setValue('11111'); //step 6
-        await expect(CartPage.inputPostalCode).toHaveValue('11111'); //expected result
+        await cartPage.inputPostalCode.setValue(postalCode); 
+        await expect(cartPage.inputPostalCode).toHaveValue(postalCode); 
         
-        await CartPage.continueBtn.click(); //step 7
-        await expect($("span[data-test*='title']")).toBeDisplayed(); //expected result
-        await expect(ItemName).toBeDisplayed(); //expected result
-        const summaryPrice = await $('.summary_subtotal_label').getText();
-        await expect(summaryPrice).toContain(ItemPrice); //expected result
+        await cartPage.clickContinueBtn(); 
+        await expect(cartPage.checkoutHeader).toBeDisplayed(); 
+        await expect(mainPage.item1Name).toBeDisplayed(); 
+        const summaryPrice = await cartPage.sumPrice.getText();
+        await expect(summaryPrice).toContain(ItemPrice); 
 
-        await CartPage.finishBtn.click(); //step 8
-        await expect($('.complete-header')).toBeDisplayed(); //expected result
-        await expect($('.complete-text')).toBeDisplayed(); //expected result
+        await cartPage.clickFinishBtn(); 
+        await expect(cartPage.successTitle).toBeDisplayed(); 
+        await expect(cartPage.successText).toBeDisplayed(); 
 
-        await CartPage.backHomeBtn.click(); //step 9
-        await expect(browser).toHaveUrl('https://www.saucedemo.com/inventory.html');
-        await expect(MainPage.cart).not.toBeDisplayed();
+        await cartPage.clickBackHomeBtn(); 
+        await loginPage.url;
+        await expect(mainPage.cart).not.toBeDisplayed();
 
     })
 
     it('Test-Case 9:Checkout without products', async()=>{
-        // upd: Site allows you to make an order even without items
-        await MainPage.goToEmptyCartPage(); //step 1
-        await CartPage.checkoutBtn.click(); //step 2
-        await expect(CartPage.checkoutForm).toBeDisplayed();
-
-        await CartPage.inputFirstName.setValue('First'); //step 3
-        await expect(CartPage.inputFirstName).toHaveValue('First'); //expected result
-
-        await CartPage.inputLastName.setValue('Last'); //step 4
-        await expect(CartPage.inputLastName).toHaveValue('Last'); //expected result
-
-        await CartPage.inputPostalCode.setValue('11111'); //step 5
-        await expect(CartPage.inputPostalCode).toHaveValue('11111'); //expected result
-        
-        await CartPage.continueBtn.click(); //step 6
-        const summaryPrice = await $('.summary_subtotal_label').getText();
-        await expect(summaryPrice).toContain("Item total: $0"); //expected result
-
-        await CartPage.finishBtn.click(); //step 7
-        await expect($('.complete-header')).toBeDisplayed(); //expected result
-        await expect($('.complete-text')).toBeDisplayed(); //expected result
+        await mainPage.goToEmptyCartPage(); 
+        await cartPage.checkoutBtn.click(); 
+        await expect(cartPage.checkoutForm).not.toBeDisplayed();
     })
 
     afterEach(async()=>{

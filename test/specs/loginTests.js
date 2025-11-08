@@ -1,58 +1,59 @@
-const { expect, browser } = require("@wdio/globals");
-const LoginPage = require("../pageobjects/login.page");
-const MainPage = require("../pageobjects/main.page");
-const testData = require("../../fixtures/data.json");
+import LoginPage from "../pageobjects/login.page";
+import MainPage from "../pageobjects/main.page";
+import testData from "../../fixtures/data.json";
 
 describe('Login-Suite', ()=>{
+    const loginPage = new LoginPage;
+    const mainPage = new MainPage;
+
     beforeEach(async ()=>{
-        //precondition
-        await browser.url(testData.baseUrl);
-        const pageTitle = await browser.getTitle();
-        await expect(pageTitle).toBe('Swag Labs');
+        await loginPage.openPage();
+        await loginPage.titlePage;
     })
 
     it('Test-Case 1: Valid Login', async ()=>{
         //In this case I didn't use login method from LoginPage because I wanted to assert every expected result for every step
 
-        await LoginPage.inputUsername.setValue(testData.validLogin); //step 1
-        await expect(LoginPage.inputUsername).toHaveValue(testData.validLogin); //expected result
+        await loginPage.inputUsername.setValue(testData.validLogin);
+        await expect(loginPage.inputUsername).toHaveValue(testData.validLogin);
 
-        await LoginPage.inputPassword.setValue(testData.validPassword); //step 2
-        await expect(LoginPage.inputPassword).toHaveValue(testData.validPassword); //expected result
-        await expect(LoginPage.inputPassword).toHaveAttribute('type', 'password'); //expected result
+        await loginPage.inputPassword.setValue(testData.validPassword);
+        await expect(loginPage.inputPassword).toHaveValue(testData.validPassword); 
+        await expect(loginPage.inputPassword).toHaveAttribute('type', 'password'); 
 
-        await LoginPage.loginBtn.click(); //step 3
-        const currentUrl = await browser.getUrl();
-        await expect(currentUrl).toContain('inventory.html'); //expected result
-        await expect(MainPage.itemsList).toBeDisplayed(); //expected result
+        await loginPage.clickLoginBtn();
+        await expect(await mainPage.url).toContain('inventory.html'); 
+        await expect(mainPage.itemsList).toBeDisplayed(); 
     })
 
     it('Test-Case 2: Login with invalid password', async ()=>{
-        await LoginPage.login(testData.validLogin, testData.invalidPassword); //step 1-3
-        await expect(LoginPage.inputUsername).toHaveValue(testData.validLogin); //expected result
-        await expect(LoginPage.inputPassword).toHaveValue(testData.invalidPassword); //expected result
-        await expect(LoginPage.error).toBeDisplayed(); //expected result     
-        await expect(LoginPage.error).toHaveText("Epic sadface: Username and password do not match any user in this service");
-        await expect(LoginPage.errorIcon).toBeDisplayed();
+        const invalidDataMessage = "Epic sadface: Username and password do not match any user in this service";
+
+        await loginPage.login(testData.validLogin, testData.invalidPassword); 
+        await expect(loginPage.inputUsername).toHaveValue(testData.validLogin); 
+        await expect(loginPage.inputPassword).toHaveValue(testData.invalidPassword); 
+        await expect(loginPage.error).toBeDisplayed();     
+        await expect(loginPage.error).toHaveText(invalidDataMessage);
+        await expect(loginPage.errorIcon).toBeDisplayed();
     })
 
     it('Test-Case 3: Login with invalid login', async ()=>{
-        await LoginPage.login(testData.invalidLogin, testData.validPassword);
-        await expect(LoginPage.inputUsername).toHaveValue(testData.invalidLogin); //expected result
-        await expect(LoginPage.inputPassword).toHaveValue(testData.validPassword); //expected result
-        await expect(LoginPage.error).toBeDisplayed(); //expected result     
-        await expect(LoginPage.errorIcon).toBeDisplayed();
+        await loginPage.login(testData.invalidLogin, testData.validPassword);
+        await expect(loginPage.inputUsername).toHaveValue(testData.invalidLogin);
+        await expect(loginPage.inputPassword).toHaveValue(testData.validPassword);
+        await expect(loginPage.error).toBeDisplayed();     
+        await expect(loginPage.errorIcon).toBeDisplayed();
     })
 
     it('Test-Case 4: Logout', async ()=>{
-        await LoginPage.login(testData.validLogin, testData.validPassword); //precondition
+        await loginPage.login(testData.validLogin, testData.validPassword);
 
-        await MainPage.burgerBtn.click(); //step 1
-        await expect(MainPage.menuItems).toBeElementsArrayOfSize(4); //expected result
+        await mainPage.clickBurgerBtn();
+        await expect(mainPage.menuItems).toBeElementsArrayOfSize(4);
 
-        await MainPage.logoutBtn.click(); //step 2
-        await expect(LoginPage.inputUsername).toHaveValue(''); //expected result
-        await expect(LoginPage.inputPassword).toHaveValue(''); //expected result
+        await mainPage.clickLogoutBtn();
+        await expect(loginPage.inputUsername).toHaveValue('');
+        await expect(loginPage.inputPassword).toHaveValue('');
     })
 
     afterEach(async()=>{

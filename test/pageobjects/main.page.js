@@ -1,6 +1,6 @@
-const { $, expect, browser } = require('@wdio/globals');
-const LoginPage = require('../pageobjects/login.page')
-
+import { browser } from "@wdio/globals";
+import LoginPage from "../pageobjects/login.page";
+const loginPage = new LoginPage;
 class MainPage{
    get itemsList () {
         return $('.inventory_list');
@@ -46,15 +46,39 @@ class MainPage{
       return $("a[href*='https://www.linkedin.com/company/sauce-labs/']");
    }
 
+   get item1 () {
+      return $('#add-to-cart-sauce-labs-backpack');
+   }
+
+   get item1Name () {
+      return $("//div[contains(text(), 'Sauce Labs Backpack')]");
+   }
+
+   get option () {
+      return $('.active_option');
+   }
+
+   get footer () {
+      return $('footer');
+   }
+
+   get url () {
+      return browser.getUrl();
+   }
+
+   async clickAddItemBtn (itemName) {
+      itemName.click();
+   } 
+
    async clickBurgerBtn(){
     this.burgerBtn.click();
-    expect(MainPage.menuItems).toBeElementsArrayOfSize(4);
+    expect(this.menuItems).toBeElementsArrayOfSize(4);
    }
 
    async clickLogoutBtn(){
     this.logoutBtn.click();
-    await expect(LoginPage.inputUsername).toHaveValue(''); //expected result
-    await expect(LoginPage.inputPassword).toHaveValue(''); //expected result
+    await expect(loginPage.inputUsername).toHaveValue(''); 
+    await expect(loginPage.inputPassword).toHaveValue(''); 
    }
 
    async goToCartPage () {
@@ -63,8 +87,10 @@ class MainPage{
    }
 
    async goToEmptyCartPage () {
-    this.emptyCart.click();
-    await expect($('.title')).toBeDisplayed();
+      this.emptyCart.click();
+      await expect($('.title')).toBeDisplayed();
+      await expect($('.cart_item_label')).not.toBeDisplayed();
+
    }
 
    async goToTwitter(){
@@ -80,4 +106,4 @@ class MainPage{
    }
 }
 
-module.exports = new MainPage();
+export default MainPage;

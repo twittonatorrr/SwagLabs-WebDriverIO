@@ -1,7 +1,6 @@
 {
     "validLogin" : "standard_user",
     "validPassword" : "secret_sauce",
-    "baseUrl" : "https://www.saucedemo.com",
     "invalidLogin" : "invalidLog",
     "invalidPassword" : "invalidPas"
 }
